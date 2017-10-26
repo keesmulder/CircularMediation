@@ -47,9 +47,9 @@ print.circMedBoot <- function(object, ...) print(object$tab, ...)
 circMediationBootstrap <- function(data, outcome, predictor, mediators, R = 1000, probs = c(.025, .975), ...) {
 
   # Compute the bootstrap using the boot package.
-  # suppressWarnings({
+  suppressWarnings({
     circmedboot <- boot(data, computeCircMediation, R = R, outcome = outcome, predictor = predictor, mediators = mediators, ...)
-  # })
+  })
 
   # Obtain the p-values for t0 > 0, which will be taken as 1 - p for t0 < 0.
   ps <- apply(circmedboot$t, 2L, function(x) mean(x <= 0))
