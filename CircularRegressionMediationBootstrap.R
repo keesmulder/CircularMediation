@@ -57,11 +57,3 @@ circMediationBootstrap <- function(data, outcome, predictor, mediators, R = 1000
         "p-value"    = ifelse(circmedboot$t0 > 0, ps, 1 - ps))
 }
 
-
-# circmedboot <- circMediationBootstrap(data, outcome = "ips", predictor = "culture", mediators = c("agaze", "cgaze"), R = 1000)
-# agazecmb <- circMediationBootstrap(data, outcome = "ips", predictor = "culture", mediators = "agaze", R = 1000)
-# cgazecmb <- circMediationBootstrap(data, outcome = "ips", predictor = "culture", mediators = "cgaze", R = 1000)
-#
-# circmedboot
-# agazecmb
-# cgazecmb
