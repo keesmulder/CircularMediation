@@ -1,0 +1,264 @@
+---
+title: "Circular Mediation through the Circular-Linear Correlation"
+author: "Kees Mulder"
+date: "September 10, 2018"
+output: pdf_document
+  
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+\tableofcontents
+
+# Linear mediation
+
+First, we will recap linear mediation. For clarity later, we will use the path analysis notation. That is, $p_{ij}$ refers to the standardized \textbf{partial} regression coefficient where $i$ is regressed on $j$, that is, $j$ predicts $i$. The order is important. These are simply the path coefficients  that one would normally put in a (standardized) path diagram. Throughout, subscripts will generally refer to variables rather than observations.
+
+In addition, $r_{ij}$ between $i$ and $j$ will denote the pairwise correlation, not partial or dependent on other variables in any way. That is, we can just get it by \texttt{cor(xi, xj)} in R.  
+
+We have three regressions that are found in simplified form here in a few ways. First, because all variables are standardized, all intercepts are zero. Second, because of the standardization, the regression coefficient of y regressed on x is equal to the correlation between the two. Lastly, I'll suppress residuals here.
+\begin{align}
+y &= r_{yx} x \\
+y &= p_{yz} z + p_{yx} x \\
+z &= p_{zx} x = r_{zx} x 
+\end{align}
+
+For this mediation model, there exist the following well-known names. 
+
+\begin{align}
+r_{yx} &= \text{Total effect} = c' \\
+p_{yx} &= \text{Direct effect} = c \\
+p_{zx} p_{yz} &= \text{Indirect effect} = ab = c - c' = r_{yx} - p_{yx}  = \text{Total - Direct}
+\end{align}
+
+This last identity is a core property of mediation models. This property is a result of the basic theorem of path analysis (see Duncan, 1966), which is in its general form
+\begin{equation}
+r_{ij} = \sum_{q} p_{iq} r_{jq},
+\end{equation}
+where the sum over $q$ is over all variables that have a path leading to variable $i$. This result can be found from the fact that the correlation between two standardized variables can be written $r_{ij} = \frac{1}{n} \sum x_i x_j$, and either of these variables can be replaced by their prediction plus residual. 
+
+We'll show quickly how to get to the standard mediation result that $ab = c - c'$. Starting from the basic theorem of path analysis, we begin by examining the total effect, that is, the correlation between $x$ and $y$, $r_{xy}$.
+
+\begin{align}
+r_{yx} &= \sum_{q} p_{yq} r_{xq} \\
+ &= p_{yz} r_{xz} + p_{yx} r_{xx} + p_{yu} r_{xu} ~~~~ [\text{u is the residual of y}]\\
+ &= p_{yz} r_{xz} + p_{yx},  ~~~~ [r_{xx} = 1, ~ \text{and} ~ r_{xu} = 0] \\
+ &= p_{yz} p_{zx} + p_{yx},  ~~~~ [\text{there is only 1 arrow to z}]
+\end{align}
+where we can see that this last part is the indirect effect plus the direct effect. 
+
+# Circular mediation
+
+Here, we will investigate the same subject, but this time applied to a mediation model where the final outcome $y$ is circular. To emphasize this, it will be called $\theta$.
+
+## Why we can't use the usual circular regression model
+
+Usually, we employ some form of circular regression for predicting $\theta$. In particular, we often use
+\begin{equation}
+\hat\theta = \beta_0 + 2 ~ \text{arctan}(\beta x).
+\end{equation}
+There is no closed-form solution for finding an optimal $\beta$, so it is usually obtained in a non-convex optimization procedure. However, the linear procedure detailed above makes use of the fact that a correlation between two variables $r_{ij}$ is equal to their univariate standardized regression coefficient $\beta_{ij}$, as well as the fact that the univariate standardized intercept is always exactly zero. Neither of these facts is true about this circular regression model, so the mediation effects can not be obtained in the same way as above. While we can not obtain equality between the difference method $c - c'$ and the product method $ab$, we could calculate either and assess their performance. 
+
+Another approach is to try to find another form of circular-linear association that is more amenable to the algebraic manipulations in the first section, which is what we will do in the next section. 
+
+## Circular-Linear correlation coefficient
+
+There are several methods of circular-linear association available, but the most relevant here is the $R_{\theta x}$ coefficient by Mardia 1976, also given in Zar 1999. To get it, first calculate the correlations between the linear variable $x$ and $c = \cos(\theta)$ (called $r_{cx}$), then $x$ and $s = \sin(\theta)$ (called $r_{sx}$), and finally $c$ and $s$ (called $r_{cs}$). The linear-circular correlation is then defined as the combined multiple correlation coefficient of the cosine and sine, that is
+\begin{equation}
+R_{\theta x} = \sqrt{\frac{r_{cx}^2 + r_{sx}^2 - 2 r_{cx}r_{sx}r_{cs}}{1 - r_{cs}^2}}.
+\end{equation}
+This correlation coeffecient has the main properties required of it: it is invariant under rotation of $\theta$, zero refers to no association, and one refers to perfect correlation. Note that $0 \leq R_{\theta x} \leq 1,$ so the direction of the correlation (clockwise or counterclockwise) is not taken into account.  
+
+
+The linear-circular correlation is a function of $r_{cx}$ and $r_{sx},$ which are linear correlations, so they do follow basic theorem of path analysis. This would allow us to proceed to derive direct and indirect effects, by obtaining the total effect $R_{\theta x}$ as a function of indirect and direct effects. This approach is soured by $r_{cs},$ the correlation between the cosine and sine components, which makes the formulae complex and hard to interpret. The solution to this problem is to rotate the circular data $\theta$.
+
+## Rotation
+
+Recall that while the $R_{\theta x},$ which is the statistic of interest, is rotation invariant, $r_{cs}$ is not. This means that we can freely rotate $\theta$ by, say, $\alpha,$ to obtain $r_{cs} = 0.$ This occurs for four different rotations. Specifically, now using a subscript $i$ to refer to an observation, and using the notation $c_i = \cos(\theta_i - \alpha)$, $s_i = \sin(\theta_i - \alpha)$, $\bar{C} = \frac{1}{n}\sum_i c_i$ and $\bar{S} = \frac{1}{n}\sum_i s_i,$ we can fill in the standard pearson residual formula:
+\begin{align}
+r_{cs} = \frac{\sum_i (c_i - \bar{C})(s_i - \bar{S})}{N \text{sd}(c) \text{sd}(s)} &= 0 \\ 
+\sum_i (c_i - \bar{C})(s_i - \bar{S}) &= 0.
+\end{align}
+Then, we can center $\theta$ (before rotation) such that the mean direction is zero, $S = 0,$ and $C = R.$ After some algebra, one may obtain that the rotation $\alpha$ must be such that 
+\begin{align}
+\sum_i (c_i - \bar{R}\cos\alpha)(s_i + \bar{R}\sin\alpha) &= 0 \\
+\sum_i \cos\theta_i \sin\theta_i \cos(2\alpha) + \cos\alpha \sin\alpha \cos(2\theta_i) + (2n - 1) \bar{R} \cos\alpha \sin\alpha &= 0 \\
+\sum_i \cos\theta_i \sin\theta_i \cos(2\alpha) + \cos\alpha \sin\alpha \left[\cos(2\theta_i) + (2n - 1) \bar{R}\right]  &= 0 \\ 
+  \frac{\cos(2\alpha)}{\cos\alpha\sin\alpha}  &= - \sum_i\frac{\cos(2\theta_i) + (2n - 1) \bar{R}}{\cos\theta_i \sin\theta_i}
+\end{align}
+This could be solved through numerical minimization, but a faster solution is given below. 
+
+We can solve this problem by recognizing that the if we take the unit vector representation $\boldsymbol{x}_i = \{\cos{\theta_i}, \sin{\theta_i}\}$, then the matrix $\boldsymbol{X} = \{\boldsymbol{x}_1, \dots, \boldsymbol{x}_n\}^T$ has the eigenvalue decomposition
+\begin{equation}
+\text{cov}(\boldsymbol{X}) = \boldsymbol{Q} \boldsymbol{\Lambda} \boldsymbol{Q}^{-1},
+\end{equation}
+where $\boldsymbol{Q}$ is a matrix of eigenvectors and $\boldsymbol{\Lambda}$ is a diagonal matrix of eigenvalues. It turns out that if we rotate by the direction of the second eigenvector, we obtain uncorrelated elements $\cos\theta$ and $\sin\theta$. The multiple solutions for the eigenvalue decomposition form the four possible solutions shown below. The eigenvalue rotation makes the computation simpler and faster. 
+
+
+```{r}
+n <- 100
+th <- rnorm(n, 1, .5)
+
+cs_cor <- Vectorize(function(rot) cor(sin(th - rot), cos(th - rot)))
+
+# Currently, the cosine and sine are correlated.
+cs_cor(0)
+
+# Compute the first eigenvector. 
+eigenvec2 <- eigen(cov(cbind(cos(th), sin(th))))$vectors[, 2]
+
+# Direction of the second eigenvector. 
+rot <- atan2(eigenvec2[2], eigenvec2[1])
+
+# Now the components are uncorrelated. 
+cs_cor(rot)
+
+# There are four solutions.
+curve(cs_cor, 0, 2*pi, ylab = "Camel height")
+abline(h = 0, col = "skyblue")
+abline(v = rot %% (2*pi), col = "red")
+
+
+th_s <- th - rot
+cor(cos(th_s), sin(th_s))
+```
+
+Not that performing this rotation can simply be done as a pre-processing step; the further analysis is not affected besides the mathematical simplifications. 
+
+
+## Mediation formulae for circular-linear correlation
+
+After the rotation, we are left with $r_{cs} = 0$ and so we obtain
+\begin{align}
+R_{\theta x} &= \sqrt{\frac{r_{cx}^2 + r_{sx}^2 - 2 r_{cx}r_{sx}r_{cs}}{1 - r_{cs}^2}} \\
+&= \sqrt{\frac{r_{cx}^2 + r_{sx}^2 - 2 r_{cx}r_{sx}0}{1 - 0^2}} \\
+&= \sqrt{r_{cx}^2 + r_{sx}^2},
+\end{align}
+which reminds us of the euclidean norm, and allows us to expand the linear correlations. Specifically, using the basic theorem of path analysis, we get
+\begin{align}
+R_{\theta x} &= \sqrt{r_{cx}^2 + r_{sx}^2} \\
+&= \sqrt{(p_{zx} p_{cz} + p_{cx})^2 + (p_{zx} p_{sz} + p_{sx})^2} \\
+\text{Total Effect} &= \sqrt{(\text{Indirect Cos Effect} + \text{Direct Cos Effect})^2 + (\text{Indirect Sin Effect} + \text{Direct Sin Effect})^2}.
+\end{align}
+
+As mentioned, we can recognize that this type of addition is simply the euclidean norm of a vector sum. In fact, we can much simplify the computation by collecting vectors of (the cosine and sine component of) the total effect $\boldsymbol{c'}_{\theta x} = (r_{cx}, r_{sx}),$ the direct effect $\boldsymbol{c}_{\theta x} = (p_{cx}, p_{sx})$ and the indirect effect $\boldsymbol{ab}_{\theta x} = (p_{zx} p_{cz}, p_{zx} p_{sz}).$ Then, denoting the euclidean norm by $\vert\vert \boldsymbol{x} \vert\vert = \sqrt{x_1^2 + x_2^2},$ we can write formulae that very closely mimic their linear counterparts:
+\begin{align}
+\text{Total Effect} = R_{\theta x} &= \vert\vert \boldsymbol{c'}_{\theta x} \vert\vert = \sqrt{r_{cx}^2 + r_{sx}^2} \\
+\text{Direct Effect}  &= \vert\vert \boldsymbol{c}_{\theta x} \vert\vert  = \sqrt{p_{cx}^2 + p_{sx}^2} \\
+\text{Indirect Effect}  &= \vert\vert \boldsymbol{ab}_{\theta x} \vert\vert  = \sqrt{(p_{zx} p_{cz})^2 + (p_{zx} p_{sz})^2}.
+\end{align}
+This brings us finally to the circular-linear correlation version of the $c - c' = ab$ formula in linear mediation:
+\begin{align}
+\text{Total Effect} = R_{\theta x} &= \vert\vert \boldsymbol{c'}_{\theta x} \vert\vert = \sqrt{r_{cx}^2 + r_{sx}^2} \\
+&= \sqrt{(p_{zx} p_{cz} + p_{cx})^2 + (p_{zx} p_{sz} + p_{sx})^2} \\
+&= \vert\vert \boldsymbol{c}_{\theta x} + \boldsymbol{ab}_{\theta x} \vert\vert \\
+&= \vert\vert \text{Direct vector} + \text{Indirect vector} \vert\vert 
+\end{align}
+and finally, we find $ab = c' - c$ in vector form:
+\begin{align}
+\text{Indirect Effect} = \vert\vert \boldsymbol{ab}_{\theta x} \vert\vert &= \vert\vert \boldsymbol{c'}_{\theta x} - \boldsymbol{c}_{\theta x} \vert\vert \\
+\text{Indirect Effect} = \vert\vert \text{Indirect vector} \vert\vert &= \vert\vert \text{Total vector} - \text{Direct vector} \vert\vert.
+\end{align}
+
+
+
+
+## Implementation
+
+Here, a few details on implementation are given. 
+
+### Partial circular-linear association
+
+Before we are completely done, we recognize that the method above requires a partial linear-circular correlation. That is $R_{\theta x}$ given $z$, and  $R_{\theta z}$ given $x$. These can simply be obtained by filling in the partial correlations, i.e. $r_{cx\cdot z}$ and $r_{sx\cdot z}$, into the formula for $R_{\theta x}$. A function to compute the conditional path coefficients is given below.
+
+```{r}
+# Calculate the standardized path coefficient between x and y given z.
+path_coef <- function(y, x, z) unname(coef(lm(scale(y) ~ scale(x) + z))[2])
+```
+
+
+
+### Performing the full mediation model
+
+Finally, in order to perform the full mediation analysis, we might use the function below. 
+
+
+
+```{r}
+# Euclidean norm for later use. 
+l2norm <- function(x) sqrt(x[1]^2 + x[2]^2)
+
+# Compute the circular-linear correlation model, with linear predictor x,
+# circular outcome th and linear mediator z.
+clcor_mediation <- function(th, x, z) {
+  
+  # Rotation by second eigenvector.
+  evec2 <- eigen(cov(cbind(cos(th),  sin(th))))$vectors[, 2]
+  rot   <- atan2(evec2[2], evec2[1]) 
+  
+  # Vector of angles with uncorrelated sine and cosine. 
+  th_rot <- th - rot
+  
+  # First get the results as (cosine, sine) vectors. 
+  # Total effect.
+  tv <- c(cor(cos(th_rot), x), cor(sin(th_rot), x))
+
+  # Direct effect
+  dv <- c(path_coef(cos(th_rot), x, z), path_coef(sin(th_rot), x, z))
+
+  # Indirect effect.
+  a <- cor(x, z)
+  p_cz <- path_coef(cos(th_rot), z, x)
+  p_sz <- path_coef(sin(th_rot), z, x)
+  iv <- c(a * p_cz, a * p_sz)
+  
+  list(effects = c(total    = l2norm(tv), 
+                   direct   = l2norm(dv), 
+                   indirect = l2norm(iv)), 
+       vectors = cbind(total    = tv,
+                       direct   = dv,
+                       indirect = iv))
+}
+```
+
+
+### Example
+
+Below is an example.
+
+```{r}
+set.seed(100)
+
+x  <- scale(rnorm(100))
+z  <- scale(x + rnorm(100))
+th <- 3 + x + z + rnorm(100) %% (2*pi)
+
+cl_med <- clcor_mediation(th, x, z)
+```
+
+This object now contains two elements. The effects in terms of the linear-circular correlation is the most important, and given first. Second, we get the vectors of effects on the cosine and sine components separately. 
+
+```{r, echo = FALSE}
+# The results.
+knitr::kable(t(cl_med$effects), caption = "Effects in terms of linear-circular correlation.")
+knitr::kable(cl_med$vectors, caption = "Effects as vectors of correlation with cosine, sine of outcomee.")
+```
+
+Finally, we demonstrate the vector addition formula at the end of the last section. 
+
+```{r}
+total    <- cl_med$vectors[,1]
+direct   <- cl_med$vectors[,2]
+indirect <- cl_med$vectors[,3]
+
+# Demonstrate the vector addition formula.
+l2norm(total - direct)
+l2norm(indirect)
+```
+
+
+
