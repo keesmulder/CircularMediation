@@ -261,4 +261,12 @@ l2norm(indirect)
 ```
 
 
+## Inference
+ 
+Usually, we are tasked not only with computing, but also with performing inference on the mediation effects. Although it is not a simple problem to solve, there a rich literature on sampling distributions of correlation coefficents, as well as multiple correlation coefficients, which our $R_{\theta x}$  coefficent is. 
+
+However, theory on this subject exclusively assumes that all predictors are normally distributed. Although the circular variable $\theta$ is the outcome, recall that $R_{\theta x}^2$ is the multiple correlation coefficient ($R^2$ or "explained variance") of $\cos\theta$ and $\sin \theta$ on $x$. So, the theory requires $\cos\theta$ and $\sin\theta$ to be normal, which is absolutely false. Even if they were, we would still run into issues that the distribution of the indirect effects is not normally distributed (a la the failure of the Sobel test), so that we should resort to some other inferential procedure. 
+
+Therefore, we shall resort to bootstrapping. 
+
 
