@@ -34,7 +34,6 @@ computeCircMediation <- function(data, inds, outcome, predictor, mediators) {
     indirect_effect = a_tilde - a)
 }
 
-
 print.circMedBoot <- function(object, ...) print(object$tab, ...)
 
 # Function to compute a single circular mediation effect.

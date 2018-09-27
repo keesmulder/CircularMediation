@@ -9,6 +9,11 @@ editor_options:
 ---
 
 ```{r setup, include=FALSE}
+
+
+library(boot)
+library(ggplot2)
+
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -270,7 +275,6 @@ However, theory on this subject exclusively assumes that all predictors are norm
 Therefore, we shall resort to bootstrapping. Thankfully, due to the computational simplicity of this approach, it will be fairly fast. The structure of the following code is chosen to mimic the previous circular mediation bootstrap function. 
 
 ```{r}
-library(boot)
 
 computeClcorMediation <- function(data, inds, outcome, predictor, mediators) {
   listres <- clcor_mediation(th = data[inds, outcome], 
@@ -317,17 +321,45 @@ print.clcorMedBoot <- function(object, ...) print(object$tab, ...)
 
 ```
 
-It can be used with the same data structure as the `circMediationBootstrap` function, and returns the .
+It can be used with the same data structure as the `circMediationBootstrap` function, and returns the combined effect, as well as the cosine and sine effects.
 
 ```{r}
-x  <- scale(rnorm(100))
-z  <- scale(x + rnorm(100))
-th <- 3 + x + z + rnorm(100) %% (2*pi)
+
+n <- 1000
+x  <- scale(rnorm(n))
+z  <- scale(x + rnorm(n))
+th <- 3 + x + z + rnorm(n) %% (2*pi)
 
 mydat <- data.frame(th, x, z)
 
 bt <- clcorMediationBootstrap(mydat, "th", "x", "z")
 
-bt
+knitr::kable(bt$tab)
+```
+
+This allows us to look at the effects in a bivariate setting too, which can be seen in the following plot:
+
+```{r}
+bmat <- data.frame(bt$bootsam)
+colnames(bmat) <- rownames(bt$tab)
+
+alph <- .4
+
+ggplot(bmat) + 
+  geom_point(aes(Total_cos, Total_sin      , col = "Total"   ), alpha = alph) +
+  geom_point(aes(Direct_cos, Direct_sin    , col = "Direct"  ), alpha = alph) +
+  geom_point(aes(Indirect_cos, Indirect_sin, col = "Indirect"), alpha = alph) +
+  ggthemes::theme_fivethirtyeight() + coord_fixed()
+```
+
+It should be noted that the axes do not have a direct interpretation after all the rotation we have done. However, this does illustrate that the vector effects are summed to obtain the total effects. A more conventional plot looks at the combined circular effects:
+
+```{r}
+
+ggplot(bmat) + 
+  geom_histogram(aes(Total      , fill = "Total"   ), alpha = alph) +
+  geom_histogram(aes(Direct     , fill = "Direct"  ), alpha = alph) +
+  geom_histogram(aes(Indirect   , fill = "Indirect"), alpha = alph) +
+  ggthemes::theme_fivethirtyeight()
 ```
 
