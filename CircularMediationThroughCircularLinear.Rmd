@@ -267,6 +267,67 @@ Usually, we are tasked not only with computing, but also with performing inferen
 
 However, theory on this subject exclusively assumes that all predictors are normally distributed. Although the circular variable $\theta$ is the outcome, recall that $R_{\theta x}^2$ is the multiple correlation coefficient ($R^2$ or "explained variance") of $\cos\theta$ and $\sin \theta$ on $x$. So, the theory requires $\cos\theta$ and $\sin\theta$ to be normal, which is absolutely false. Even if they were, we would still run into issues that the distribution of the indirect effects is not normally distributed (a la the failure of the Sobel test), so that we should resort to some other inferential procedure. 
 
-Therefore, we shall resort to bootstrapping. 
+Therefore, we shall resort to bootstrapping. Thankfully, due to the computational simplicity of this approach, it will be fairly fast. The structure of the following code is chosen to mimic the previous circular mediation bootstrap function. 
 
+```{r}
+library(boot)
+
+computeClcorMediation <- function(data, inds, outcome, predictor, mediators) {
+  listres <- clcor_mediation(th = data[inds, outcome], 
+                             z  = data[inds, mediators], 
+                             x  = data[inds, predictor])
+  res        <- unlist(listres)
+  tdi        <- c("Total", "Direct", "Indirect")
+  names(res) <- c(tdi, paste0(rep(tdi, each = 2), c("_cos", "_sin")))
+  res
+}
+
+
+clcorMediationBootstrap <- function(data, outcome, predictor, mediators, 
+                                    R = 1000, probs = c(.025, .975), ...) {
+  
+  
+  # Compute the bootstrap using the boot package.
+  suppressWarnings({
+    clcormedboot <- boot(data, computeClcorMediation, R = R, 
+                         outcome   = outcome, 
+                         predictor = predictor, 
+                         mediators = mediators, ...)
+  })
+
+  # Obtain the p-values for t0 > 0, which will be taken as 1 - p for t0 < 0.
+  ps <- apply(clcormedboot$t, 2L, function(x) mean(x <= 0))
+
+  # Obtain result
+  res <- list(tab = cbind(original     = clcormedboot$t0,
+                         bias         = apply(clcormedboot$t, 2L, mean, na.rm = TRUE) - clcormedboot$t0,
+                         "std. error" = sqrt(apply(clcormedboot$t, 2L, function(t.st) var(t.st[!is.na(t.st)]))),
+                         t(apply(clcormedboot$t, 2L, function(x) quantile(x, probs = probs))),
+                         "one-sided p-value"    = ifelse(clcormedboot$t0 > 0, ps, 1 - ps),
+                         "two-sided p-value"    = ifelse(clcormedboot$t0 > 0, ps*2, (1 - ps) * 2 )),
+              bootsam = clcormedboot$t,
+              bootobj = clcormedboot)
+
+  class(res) <- c("clcorMedBoot", class(res))
+  res
+}
+
+
+print.clcorMedBoot <- function(object, ...) print(object$tab, ...)
+
+```
+
+It can be used with the same data structure as the `circMediationBootstrap` function, and returns the .
+
+```{r}
+x  <- scale(rnorm(100))
+z  <- scale(x + rnorm(100))
+th <- 3 + x + z + rnorm(100) %% (2*pi)
+
+mydat <- data.frame(th, x, z)
+
+bt <- clcorMediationBootstrap(mydat, "th", "x", "z")
+
+bt
+```
 
